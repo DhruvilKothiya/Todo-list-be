@@ -5,6 +5,7 @@ import crud
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from fastapi.middleware.cors import CORSMiddleware
 import os
 
 
@@ -29,6 +30,14 @@ def get_db():
 
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
 
 # Dependency
 def get_db():
@@ -64,3 +73,43 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return {"message": "User deleted successfully"}
+
+
+# Task endpoints (new code)
+
+# Create a new task for a user
+@app.post("/tasks/")
+def create_task(user_id: int, title:str,is_completed: bool = False, db: Session = Depends(get_db)):
+    return crud.create_task(db, user_id=user_id,title=title, is_completed=is_completed)
+
+# Get all tasks for a specific user
+@app.get("/users/{user_id}/tasks/")
+def get_tasks(user_id: int, db: Session = Depends(get_db)):
+    tasks = crud.get_tasks(db, user_id=user_id)
+    return tasks
+
+
+# Update task
+@app.put("/tasks/{task_id}")
+def update_task(task_id: int,title:str, is_completed: bool, db: Session = Depends(get_db)):
+
+    task = crud.update_task(db, task_id=task_id,title=title, is_completed=is_completed)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+# Get task by task_id
+@app.get("/tasks/{task_id}")
+def get_task(task_id: int, db: Session = Depends(get_db)):
+    task = crud.get_task_by_id(db, task_id=task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return task
+
+# Delete task
+@app.delete("/tasks/{task_id}")
+def delete_task(task_id: int, db: Session = Depends(get_db)):
+    task = crud.delete_task(db, task_id=task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"message": "Task deleted successfully"}
