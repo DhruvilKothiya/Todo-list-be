@@ -12,6 +12,10 @@ def create_user(db: Session, name: str, email: str, password: str):
     db.refresh(user)
     return user
 
+def get_user_by_email(db: Session, email: str):
+    user = db.query(User).filter(User.email == email).first()
+    return user
+
 # Read users
 def get_users(db: Session):
     return db.query(User).all()
@@ -45,19 +49,6 @@ def create_task(db: Session, user_id: int, title: str, is_completed: bool = Fals
     db.refresh(task)
     return task
 
-## Read all tasks for a user with optional search and sort functionality
-def get_tasks(db: Session, user_id: int, search: str | int = None   , sort: str = "asc"):
-    query = db.query(TaskStatus).filter(TaskStatus.user_id == user_id)
-    
-    if search:
-        query = query.filter(TaskStatus.title.ilike(f"%{search}%"))  # Case-insensitive search
-    
-    if sort == "asc":
-        query = query.order_by(TaskStatus.title.asc())
-    elif sort == "desc":
-        query = query.order_by(TaskStatus.title.desc())
-    
-    return query.all()
 
 # Read task by task_id
 def get_task_by_id(db: Session, task_id: int):
