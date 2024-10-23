@@ -69,6 +69,8 @@ class UserSchema(BaseModel):
     password: str
 
 
+class CreateUserSchema(UserSchema):
+    name: str
 
 # Hash password using bcrypt
 def get_password_hash(password):
@@ -126,9 +128,9 @@ def login_for_access_token(form_data: UserSchema, db: Session = Depends(get_db))
 
 # Create User Endpoint (Password will be hashed)
 @app.post("/users/")
-def create_user(name: str, email: str, password: str, db: Session = Depends(get_db)):
-    hashed_password = get_password_hash(password)
-    return crud.create_user(db, name=name, email=email, password=hashed_password)
+def create_user(item: CreateUserSchema, db: Session = Depends(get_db)):
+    hashed_password = get_password_hash(item.password)
+    return crud.create_user(db, name=item.name, email=item.email, password=hashed_password)
 
 # Read all users (Only accessible with a valid token)
 @app.get("/users/")
